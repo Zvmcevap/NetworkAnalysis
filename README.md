@@ -47,7 +47,7 @@ So, lets breakdown what this program can find out.
 
 #### Graph Level
 
-![InitialScreen](https://github.com/Zvmcevap/NetworkAnalysis/assets/60576794/b0f8ae67-15ce-4f92-8fba-e66164a20e96)
+  ![InitialScreen](https://github.com/Zvmcevap/NetworkAnalysis/assets/60576794/b0f8ae67-15ce-4f92-8fba-e66164a20e96)
 
 On the bigger scale the program checks for:
 
@@ -56,7 +56,7 @@ On the bigger scale the program checks for:
 - **Communities:** Recursively erases edges and saves a subgraph if it has more partitions than before. Ends when all
   edges have the same betweeness.
 
- ![Communities](https://github.com/Zvmcevap/NetworkAnalysis/assets/60576794/29079528-8b5a-458a-ae72-1a5162f28f61)  
+  ![Communities](https://github.com/Zvmcevap/NetworkAnalysis/assets/60576794/29079528-8b5a-458a-ae72-1a5162f28f61)  
   
 - **Euler/Hamilton path/circuit:** If they are possible it finds them and saves them for display, if not tells you
   why they are not.
@@ -74,7 +74,7 @@ On the bigger scale the program checks for:
 - **Subgraphs:** Made for communities can be loaded from the main graph to see the same information as for main graph
 - **Adjacency Matris:** Ones for connection, Zeros for not.
 
-![adjacency_matrix](https://github.com/Zvmcevap/NetworkAnalysis/assets/60576794/f609abc0-9ff1-4d1a-bb05-89f98065e9e1)
+  ![adjacency_matrix](https://github.com/Zvmcevap/NetworkAnalysis/assets/60576794/f609abc0-9ff1-4d1a-bb05-89f98065e9e1)
 
 
 #### Node / Edge Level
