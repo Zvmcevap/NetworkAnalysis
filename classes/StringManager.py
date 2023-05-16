@@ -836,10 +836,10 @@ class StringManager:
             if command == "b":
                 return
 
-            elif command.isdigit() and len(self.GM.current_graph.subgraphs) > int(command):
+            elif command.isdigit() and len(self.GM.current_graph.subgraphs) > int(command) > 0:
                 wrong_command = False
                 main_graph = self.GM.current_graph
-                self.GM.current_graph = main_graph.subgraphs[int(command)]
+                self.GM.current_graph = main_graph.subgraphs[int(command) - 1]
                 self.graph_analysis()
                 self.GM.current_graph = main_graph
 
