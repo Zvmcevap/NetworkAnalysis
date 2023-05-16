@@ -1,3 +1,4 @@
+import sys
 from operator import attrgetter
 import os
 import time
@@ -677,7 +678,7 @@ class StringManager:
                     if filename == "b":
                         wrong_command = False
                         break
-                    elif self.GM.load_from_file(filename=filename):
+                    elif self.GM.load_from_file(filename=f'{filename}'):
                         self.GM.analyze_graph(sm=self)
                         return True
                     else:
