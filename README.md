@@ -72,7 +72,7 @@ On the bigger scale the program checks for:
 
 - **Min / Max / Avg:** For all node and edge specific data (like, density, diameter and so on).
 - **Subgraphs:** Made for communities can be loaded from the main graph to see the same information as for main graph
-- **Adjacency Matris:** Ones for connection, Zeros for not.
+- **Adjacency Matrix:** Ones for connection, Zeros for not.
 
   ![adjacency_matrix](https://github.com/Zvmcevap/NetworkAnalysis/assets/60576794/f609abc0-9ff1-4d1a-bb05-89f98065e9e1)
 
