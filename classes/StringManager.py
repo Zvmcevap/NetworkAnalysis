@@ -941,9 +941,6 @@ class StringManager:
             self.print(sentence=node_string,
                        options=["f-find path to another node",
                                 "s-social distances",
-                                "ap-all paths from all nodes",
-                                "nb-all bridges for all nodes",
-                                "eb-edge betweeness",
                                 "b-back"],
                        wrong_command=wrong_command
                        )
