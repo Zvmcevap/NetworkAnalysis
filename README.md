@@ -19,7 +19,6 @@ The program runs in a terminal and has listed available options to follow.
 
 ![image](https://github.com/Zvmcevap/NetworkAnalysis/assets/60576794/2b484d09-3d94-4a85-af8c-36afded9151d)
 
-
 Each line of the text file has to have either 1 or 2 node names seperated by a space:
 
 ```
@@ -32,7 +31,7 @@ d
 
 Each new line represents either a connection between 2 nodes or a single node.
 
-#### Generating a graph
+#### Generating a mathematical graph
 
 There are a number of options for generating simple graph for any number of nodes **n**:
 
@@ -41,13 +40,27 @@ There are a number of options for generating simple graph for any number of node
 - **Cn** cycles
 - **Qn** hypercubes
 
+#### Generating a random graph
+
+I have added a couple of procedurally generated graphs:
+
+- **'Kmecki' random** select a number of nodes and edges and blindly throw them in
+- **'Mathematical' random** create a set amount of nodes and on each pair of nodes decide if they have a connection
+  based on p
+- **Small world** creates a cycle of n nodes with added connections to 2 steps away, then based on probability p,
+  reconnect an edge to another node.
+- **Scale free** Barabasi Albert scale free graph building, start with a clique (Kn) of m0 nodes, then for each new node
+  connect it to m other nodes, with preference to higher degree nodes. End when n nodes are reached.
+
+![img.png](img.png)
+
 ### Analysis
 
 So, lets breakdown what this program can find out.
 
 #### Graph Level
 
-  ![InitialScreen](https://github.com/Zvmcevap/NetworkAnalysis/assets/60576794/b0f8ae67-15ce-4f92-8fba-e66164a20e96)
+![InitialScreen](https://github.com/Zvmcevap/NetworkAnalysis/assets/60576794/b0f8ae67-15ce-4f92-8fba-e66164a20e96)
 
 On the bigger scale the program checks for:
 
@@ -56,14 +69,14 @@ On the bigger scale the program checks for:
 - **Communities:** Recursively erases edges and saves a subgraph if it has more partitions than before. Ends when all
   edges have the same betweeness.
 
-  ![Communities](https://github.com/Zvmcevap/NetworkAnalysis/assets/60576794/29079528-8b5a-458a-ae72-1a5162f28f61)  
-  
+  ![Communities](https://github.com/Zvmcevap/NetworkAnalysis/assets/60576794/29079528-8b5a-458a-ae72-1a5162f28f61)
+
 - **Euler/Hamilton path/circuit:** If they are possible it finds them and saves them for display, if not tells you
   why they are not.
-  
+
   ![Hamilton](https://github.com/Zvmcevap/NetworkAnalysis/assets/60576794/8486ab38-780a-4b63-87ad-86efebcd9028)
   ![EulerFail](https://github.com/Zvmcevap/NetworkAnalysis/assets/60576794/ce25a6f3-5813-4aea-87dd-97927b194b61)
-  
+
 
 - **Bipartite:** Checks if the graph is bipartite, if yes colors the nodes, if not finds an odd cycle and displays it.
 
@@ -75,7 +88,6 @@ On the bigger scale the program checks for:
 - **Adjacency Matrix:** Ones for connection, Zeros for not.
 
   ![adjacency_matrix](https://github.com/Zvmcevap/NetworkAnalysis/assets/60576794/f609abc0-9ff1-4d1a-bb05-89f98065e9e1)
-
 
 #### Node / Edge Level
 
