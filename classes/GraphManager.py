@@ -333,8 +333,11 @@ class GraphManager:
         # scaled_weights = [(node.degree / graph.max_degree) ** 2 for node in graph.nodes]
         # probabilities = [weight / sum(scaled_weights) for weight in scaled_weights]
 
-        selected_nodes = random.choices(graph.nodes, weights=probabilities, k=m)
-        return selected_nodes
+        selected_nodes = set()
+        while len(selected_nodes) < m:
+            selected_node = random.choices(graph.nodes, weights=probabilities, k=1)[0]
+            selected_nodes.add(selected_node)
+        return list(selected_nodes)
 
     def generate_graph(self, g_type: str, numeric_args: Union[int, List[int], None] = None) -> bool:
         """
