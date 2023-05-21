@@ -114,10 +114,6 @@ class Graph:
         else:
             self.average_degree = 0
 
-    def get_max_degree_nodes(self):
-        # Return a list of nodes with degree == maximum degree in graph
-        return [node for node in self.nodes if node.degree == self.max_degree]
-
     def set_number_of_connections_and_density(self):
         self.number_of_edges = self.total_degree // 2
         L_max = (len(self.nodes) * (len(self.nodes) - 1)) // 2
@@ -149,6 +145,7 @@ class Graph:
                 if node.paths[finish] is not None:
                     partition = partition.union(set(path for path in node.paths[finish]))
                     path_lengths.append(len(list(node.paths[finish])[0]) - 1)
+
                     if self.diameter < len(list(node.paths[finish])[0]) - 1:
                         self.diameter = len(list(node.paths[finish])[0]) - 1
                 else:
@@ -156,6 +153,19 @@ class Graph:
 
         if len(path_lengths) > 0:
             self.average_path_length = sum(path_lengths) / len(path_lengths)
+
+        # merge partitions
+        result = []
+        for partition in self.partitions:
+            merged = False
+            for i, merged_set in enumerate(result):
+                if merged_set.intersection(partition):
+                    result[i] = merged_set.union(partition)
+                    merged = True
+                    break
+            if not merged:
+                result.append(partition)
+        self.partitions = result
 
     def get_path_from_final_node(self, node: Node):
         if node is None:
@@ -682,11 +692,11 @@ class Graph:
              - None
         """
 
-        self.connectivity = None
+        self.connectivity = None if self.connected else 0
         current_graph = self
         i = 1
         current_snips = []
-        while self.check_if_snip(graph=current_graph):
+        while self.check_if_snip(graph=current_graph) and len(current_graph.partitions) < 5:
             # Generate new graph
             new_nodes = self.get_node_copies(nodes=current_graph.nodes)
             edge_to_delete = max(current_graph.edge_betweeness, key=current_graph.edge_betweeness.get)
@@ -715,7 +725,7 @@ class Graph:
                 self.snips.append(current_snips)
                 current_snips = []
 
-            else:
+            elif len(self.subgraphs) == 0:
                 if len(new_graph.partitions) > len(self.partitions):
                     self.subgraphs.append(new_graph)
                     self.snips.append(current_snips)

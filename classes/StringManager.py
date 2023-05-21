@@ -519,10 +519,12 @@ class StringManager:
         main_string = "\n    NODE     DGR    CLST    BETW    BRIDG    CLOS    NEIGHBORS\n"  # 8, 4
         main_string = self.color("blue", main_string)
         nodes_copy = nodes.copy()
-        nodes_copy.sort(key=attrgetter(sorter), reverse=True)
+        if sorter == "name":
+            nodes_copy.sort()
+        else:
+            nodes_copy.sort(key=attrgetter(sorter), reverse=True)
         for node in nodes_copy:
             main_string += "\n" + self.get_node_string(node)
-
         return main_string
 
     def get_specific_node_string(self, node: Node):
@@ -697,6 +699,8 @@ class StringManager:
                                 "p-petersen",
                                 "kr-kmecki random",
                                 "mr-mathematical random",
+                                "sw-small world",
+                                "sf-scale free",
                                 "b-back"],
                        wrong_command=wrong_command
                        )
@@ -765,11 +769,13 @@ class StringManager:
                 return True
 
             elif command == "kr":
-                n = self.get_integer(f"Erdos-Renyi type of random graph\n The 'kmečki'-way (number of nodes and edges defined and randomly placed),\n enter number of nodes n: ")
+                n = self.get_integer(
+                    f"Erdos-Renyi type of random graph\n The 'kmečki'-way (number of nodes and edges defined and randomly placed),\n enter number of nodes n: ")
                 if n is None:
                     wrong_command = False
                     continue
-                m = self.get_integer(f"Erdos-Renyi type of random graph\n The 'kmečki'-way (number of nodes and edges defined and randomly placed),\n with {n} nodes, enter number of edges e: ")
+                m = self.get_integer(
+                    f"Erdos-Renyi type of random graph\n The 'kmečki'-way (number of nodes and edges defined and randomly placed),\n with {n} nodes, enter number of edges e: ")
                 if m is None:
                     wrong_command = False
                     continue
@@ -800,6 +806,33 @@ class StringManager:
                                    options=[""])
                         input("Press Enter")
                         return False
+                self.GM.analyze_graph(sm=self)
+                return True
+
+            elif command == "sw":
+                n = self.get_integer(
+                    f"Small-world type of random graph\n Take n nodes with high clustering coefficient and reconnect them with p probability,\n enter number of nodes n above 2: ")
+                if n is None or n <= 2:
+                    wrong_command = False
+                    continue
+                p = self.get_integer(
+                    f"Small-world type of random graph\n Take n nodes with high clustering coefficient and reconnect them with p probability,,\n Defined {n} nodes, enter integer p representing p/100 probability: ")
+                if p is None:
+                    wrong_command = False
+                    continue
+                self.GM.generate_graph(g_type="sw", numeric_args=[n, p])
+                self.GM.analyze_graph(sm=self)
+                return True
+
+            elif command == "sf":
+                n = self.get_integer(
+                    f"Scale-free Barabas-Albert type of random graph\n end size of n nodes, starting clique of m0 size,\n each new node gets m number of connections weighted in high degree nodes favour.\n Type in n:  ")
+                m0 = self.get_integer(
+                    f"Scale-free Barabas-Albert type of random graph\n end size of n nodes, starting clique of m0 size,\n each new node gets m number of connections weighted in high degree nodes favour.\n n = {n}; Type in m0:  ")
+                m = self.get_integer(
+                    f"Scale-free Barabas-Albert type of random graph\n end size of n nodes, starting clique of m0 size,\n each new node gets m number of connections weighted in high degree nodes favour.\n n = {n}; m0 = {m0}, Type in m:  ")
+
+                self.GM.generate_graph(g_type="sf", numeric_args=[n, m0, m])
                 self.GM.analyze_graph(sm=self)
                 return True
             else:
@@ -883,7 +916,7 @@ class StringManager:
                 return
 
             elif command.isdigit() and len(self.GM.current_graph.subgraphs) > 0:
-                if len(self.GM.current_graph.subgraphs) > int(command) > 0:
+                if len(self.GM.current_graph.subgraphs) >= int(command) > 0:
                     wrong_command = False
                     main_graph = self.GM.current_graph
                     self.GM.current_graph = main_graph.subgraphs[int(command) - 1]

@@ -94,7 +94,13 @@ class Node:
         else:
             self.clustering_coefficient = 0
 
-    # Overwritten the __str__ and __repr__ methods for more useful printing to terminal
+    # Overwritten methods for more useful printing to terminal
+    def __lt__(self, other):
+        if self.name.isdigit() and other.name.isdigit():
+            return int(self.name) < int(other.name)
+        else:
+            return self.name < other.name
+
     def __str__(self):
         return f"{self.name=}; {self.degree=}; {self.clustering_coefficient=}; {self.betweeness=}"
 

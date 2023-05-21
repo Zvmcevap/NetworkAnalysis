@@ -200,7 +200,7 @@ class GraphManager:
         Returns:
              - Graph
         """
-        new_graph = Graph(name=f"random-{len([g for g in self.graphs if g.name[:7] == 'random'])}")
+        new_graph = Graph(name=f"random-{len([g for g in self.graphs if g.name[:6] == 'random'])}-kmecki")
 
         for node_name in range(n):
             new_node = Node(name=str(node_name))
@@ -231,7 +231,7 @@ class GraphManager:
         Returns:
              - Graph
         """
-        new_graph = Graph(name=f"random-{len([g for g in self.graphs if g.name[:7] == 'random'])}")
+        new_graph = Graph(name=f"random-{len([g for g in self.graphs if g.name[:6] == 'random'])}-math")
 
         for node_name in range(n):
             new_node = Node(name=str(node_name))
@@ -240,10 +240,101 @@ class GraphManager:
         for i, first_node in enumerate(new_graph.nodes):
             for j in range(i + 1, len(new_graph.nodes)):
                 second_node = new_graph.nodes[j]
-                if random.randint(0, 100) >= p:
+                if random.randint(0, 100) <= p:
                     first_node.neighbors.append(second_node)
                     second_node.neighbors.append(first_node)
         return new_graph
+
+    def generate_small_world_graph(self, n: int, p: int):
+        """
+        Generate a small-world graph, by taking a cycle of n nodes (Cn), add connections to nodes 1 step away.
+        Then using a p in 100,000 probability go through each edge and reconnect if the dice falls its way.
+
+        Parameters:
+            - n (int): number of nodes
+            - p (int): probability of an edge reconnection, compared to a random integer between 0 and 100.
+
+        Returns:
+             - Graph
+        """
+        new_graph = self.generate_c_graph(n=n)
+        new_graph.name = f"random-{len([g for g in self.graphs if g.name[:6] == 'random'])}-smallworld"
+
+        # Create a densely packed cyclic graph
+        for i, node in enumerate(new_graph.nodes):
+            node_neighbor = new_graph.nodes[(i + 2) % n]
+            if node == node_neighbor or node_neighbor in node.neighbors:
+                continue
+            if node in node_neighbor.neighbors:
+                raise Exception("WTF!!!")
+            node.neighbors.append(node_neighbor)
+            node_neighbor.neighbors.append(node)
+
+        # Shuffling connections
+        connections = []
+        for main_node in new_graph.nodes:
+            for neighbor in main_node.neighbors:
+                if {main_node, neighbor} not in connections:
+                    connections.append({main_node, neighbor})
+
+        for connection in connections:
+            if p >= random.randint(0, 100):
+                nodes = list(connection)
+                nodes[0].neighbors.remove(nodes[1])
+                nodes[1].neighbors.remove(nodes[0])
+
+                rand_node = random.choice(new_graph.nodes)
+                while rand_node == nodes[0] or rand_node == nodes[1]:
+                    rand_node = random.choice(new_graph.nodes)
+                nodes[0].neighbors.append(rand_node)
+                rand_node.neighbors.append(nodes[0])
+
+        return new_graph
+
+    def generate_scalefree_graph(self, n: int, m0: int, m: int):
+        """
+        Scale-free graph as explained by Barabasi and Albert just before Y2K ended the digital age.
+
+        Creates a "clique", or a complete graph of m0 nodes, then add new nodes until "n" nodes are reached.
+
+        Connect every new node to m existing nodes already present in the graph. The probability of connecting
+        to a specific existing node depends on its degree with higher degree nodes having a higher probability
+        of being selected for the connection.
+
+        Parameters:
+            - n (int): number of nodes needed to complete the graph
+            - m0 (int): size of starting graph, Km0
+            - m (int): number of connections for each new node added
+
+        Returns:
+            - Graph: a scale free one, at that
+        """
+
+        new_graph = self.generate_kn_graph(n=m0)
+        new_graph.name = f"random-{len([g for g in self.graphs if g.name[:6] == 'random'])}-scalefree"
+        new_graph.set_node_degrees()
+
+        for i in range(n):
+            new_node = Node(name=str(len(new_graph.nodes) + 1))
+            connections = self.scale_free_selection(graph=new_graph, m=m)
+            for conn in connections:
+                new_node.neighbors.append(conn)
+                conn.neighbors.append(new_node)
+            new_graph.nodes.append(new_node)
+            new_graph.set_node_degrees()
+
+        return new_graph
+
+    def scale_free_selection(self, graph: Graph, m: int):
+        # Pick based on the nodes degree normalized to the total degree
+        probabilities = [node.degree / graph.total_degree for node in graph.nodes]
+
+        # Commented out the weighted probabilities, it did not work as well
+        # scaled_weights = [(node.degree / graph.max_degree) ** 2 for node in graph.nodes]
+        # probabilities = [weight / sum(scaled_weights) for weight in scaled_weights]
+
+        selected_nodes = random.choices(graph.nodes, weights=probabilities, k=m)
+        return selected_nodes
 
     def generate_graph(self, g_type: str, numeric_args: Union[int, List[int], None] = None) -> bool:
         """
@@ -286,8 +377,13 @@ class GraphManager:
         if g_type == "mr":
             new_graph = self.generate_math_random_graph(n=numeric_args[0], p=numeric_args[1])
 
-        if g_type == "n":
-            pass
+        if g_type == "sw":
+            if numeric_args[0] <= 2:
+                return False
+            new_graph = self.generate_small_world_graph(n=numeric_args[0], p=numeric_args[1])
+
+        if g_type == "sf":
+            new_graph = self.generate_scalefree_graph(n=numeric_args[0], m0=numeric_args[1], m=numeric_args[2])
 
         if new_graph is None:
             return False
@@ -365,6 +461,8 @@ class GraphManager:
 
             elif i == 8:
                 sm.print_progress(current=i, total=total, flavour_text=analysis)
+                if len(graph.nodes) > 50:
+                    continue
                 graph.analyze_hamilton()
 
             elif i == 9:
