@@ -1,5 +1,6 @@
+import random
 import time
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from classes.Graph import Graph
 from classes.Node import Node
@@ -73,8 +74,6 @@ class GraphManager:
 
         All nodes connected to all nodes.
         """
-        if "k" + str(n) in [g.name for g in self.graphs]:
-            return False
 
         nodes = []
         for name in range(n):
@@ -85,25 +84,20 @@ class GraphManager:
 
         new_graph = Graph(name="k" + str(n))
         new_graph.nodes = nodes
+        return new_graph
 
-        self.graphs.append(new_graph)
-        self.current_graph = new_graph
-        return True
-
-    def generate_kxy_graph(self, x: int, y: int):
+    def generate_knm_graph(self, n: int, m: int):
         """
         Full bipartite graph.
         All nodes of 'x' get connected to all nodes of 'y'.
         """
-        if f"k{x},{y}" in [g.name for g in self.graphs]:
-            return False
 
         left_nodes = []
-        for name in range(x):
+        for name in range(n):
             left_nodes.append(Node(name=str(name + 1)))
 
         right_nodes = []
-        for name in range(x, y + x):
+        for name in range(n, m + n):
             right_node = Node(name=str(name + 1))
             right_node.neighbors = left_nodes.copy()
             right_nodes.append(right_node)
@@ -111,20 +105,15 @@ class GraphManager:
         for left_node in left_nodes:
             left_node.neighbors = right_nodes.copy()
 
-        new_graph = Graph(name=f"k{x},{y}")
+        new_graph = Graph(name=f"k{n},{m}")
         new_graph.nodes = left_nodes + right_nodes
 
-        self.graphs.append(new_graph)
-        self.current_graph = new_graph
-        return True
+        return new_graph
 
     def generate_c_graph(self, n):
         """
         Vertices connected by one in front and one in back, cyclical like.
         """
-        if "c" + str(n) in [g.name for g in self.graphs]:
-            return False
-
         nodes = []
         for name in range(n):
             nodes.append(Node(name=str(name + 1)))
@@ -135,16 +124,11 @@ class GraphManager:
         new_graph = Graph(name="c" + str(n))
         new_graph.nodes = nodes
 
-        self.graphs.append(new_graph)
-        self.current_graph = new_graph
-        return True
+        return new_graph
 
-    def generate_q_graph(self, n):
-        if "q" + str(n) in [g.name for g in self.graphs]:
-            return False
-
+    def generate_q_graph(self, n) -> Graph:
         """
-        So..
+        So...
         The Qn graph has 2^n vertices and n * 2^(n-1) edges. Each vertex in the graph represents 
         a binary string of length n, where each digit is either 0 or 1, and two vertices are adjacent if 
         and only if their binary strings differ in exactly one position.
@@ -170,9 +154,7 @@ class GraphManager:
         new_graph = Graph(name="q" + str(n))
         new_graph.nodes = nodes
 
-        self.graphs.append(new_graph)
-        self.current_graph = new_graph
-        return True
+        return new_graph
 
     def q_has_connection(self, node_1, node_2):
         """
@@ -185,6 +167,133 @@ class GraphManager:
                 diff_count += 1
             if diff_count > 1:
                 return False
+        return True
+
+    def generate_petersen_graph(self):
+        k5 = self.generate_kn_graph(n=5)
+        c5 = self.generate_c_graph(n=5)
+        new_graph = Graph(name="petersen")
+
+        for i in range(5):
+            k_node = k5.nodes[i]
+            k_node.neighbors.remove(k5.nodes[i - 1])
+            k_node.neighbors.remove(k5.nodes[(i + 1) % 5])
+            c_node = c5.nodes[i]
+            k_node.name = f"k{i}"
+            c_node.name = f"c{i}"
+            k_node.neighbors.append(c_node)
+            c_node.neighbors.append(k_node)
+
+            new_graph.nodes.append(k_node)
+            new_graph.nodes.append(c_node)
+        return new_graph
+
+    def generate_kmecki_random_graph(self, n: int, e: int):
+        """
+        Generate an Erdos-Renyi random graph, take a number of nodes and edges and
+        randomly throw them in the graph. The "Kmecki"-way
+
+        Parameters:
+            - n (int): number of nodes
+            - e (int): number of edges
+
+        Returns:
+             - Graph
+        """
+        new_graph = Graph(name=f"random-{len([g for g in self.graphs if g.name[:7] == 'random'])}")
+
+        for node_name in range(n):
+            new_node = Node(name=str(node_name))
+            new_graph.nodes.append(new_node)
+
+        edges = []
+        if e > (n ** 2 - n) // 2:
+            e = (n ** 2 - n) // 2
+
+        for edge in range(e):
+            new_edge = random.sample(new_graph.nodes, k=2)
+            while set(new_edge) in edges:
+                new_edge = random.sample(new_graph.nodes, k=2)
+            edges.append(set(new_edge))
+            new_edge[0].neighbors.append(new_edge[1])
+            new_edge[1].neighbors.append(new_edge[0])
+        return new_graph
+
+    def generate_math_random_graph(self, n: int, p: int):
+        """
+        Generate an Erdos-Renyi random graph, take a number of nodes and probability of an edge between another node
+        for pairs between all nodes. The "mathematical"-way.
+
+        Parameters:
+            - n (int): number of nodes
+            - p (int): probability of an edge, compared to a random integer between 0 and 100
+
+        Returns:
+             - Graph
+        """
+        new_graph = Graph(name=f"random-{len([g for g in self.graphs if g.name[:7] == 'random'])}")
+
+        for node_name in range(n):
+            new_node = Node(name=str(node_name))
+            new_graph.nodes.append(new_node)
+
+        for i, first_node in enumerate(new_graph.nodes):
+            for j in range(i + 1, len(new_graph.nodes)):
+                second_node = new_graph.nodes[j]
+                if random.randint(0, 100) >= p:
+                    first_node.neighbors.append(second_node)
+                    second_node.neighbors.append(first_node)
+        return new_graph
+
+    def generate_graph(self, g_type: str, numeric_args: Union[int, List[int], None] = None) -> bool:
+        """
+        Saves the graph we are generating as the current graph, if successful
+
+        Parameters:
+            - g_type (string): the type of graph we are making (hypercube, cycle, complete, petersen, natural)
+            - numeric_args (int) (List of ints): integer or list of integers, needed to successfully generate a graph
+
+        Returns:
+             - True: if successful
+             - False: if graph is already in memory
+        """
+        new_graph = None
+
+        if g_type == "q":
+            if "q" + str(numeric_args) in [g.name for g in self.graphs]:
+                return False
+            new_graph = self.generate_q_graph(n=numeric_args)
+        if g_type == "c":
+            if "c" + str(numeric_args) in [g.name for g in self.graphs]:
+                return False
+            new_graph = self.generate_c_graph(n=numeric_args)
+        if g_type == "kn":
+            if "k" + str(numeric_args) in [g.name for g in self.graphs]:
+                return False
+            new_graph = self.generate_kn_graph(n=numeric_args)
+        if g_type == "knm":
+            if f"k{numeric_args[0]},{numeric_args[1]}" in [g.name for g in self.graphs]:
+                return False
+            new_graph = self.generate_knm_graph(n=numeric_args[0], m=numeric_args[1])
+        if g_type == "p":
+            if "petersen" in [g.name for g in self.graphs]:
+                return False
+            new_graph = self.generate_petersen_graph()
+
+        if g_type == "kr":
+            new_graph = self.generate_kmecki_random_graph(n=numeric_args[0], e=numeric_args[1])
+
+        if g_type == "mr":
+            new_graph = self.generate_math_random_graph(n=numeric_args[0], p=numeric_args[1])
+
+        if g_type == "n":
+            pass
+
+        if new_graph is None:
+            return False
+
+        self.graphs.append(new_graph)
+        self.current_graph = new_graph
         return True
 
     def analyze_graph(self, sm, graph: Graph = None):

@@ -318,7 +318,7 @@ class StringManager:
         data["Max Communities: "] = "0" if len(graph.subgraphs) == 0 else f'{len(graph.subgraphs[-1].partitions)}'
 
         data["Connected: "] = "YES" if graph.connected else "NO"
-        data["Avg Edge Betweeness"] = f"{graph.avg_edge_betweeness:.2f}"
+        data["Avg Edge Betweeness: "] = f"{graph.avg_edge_betweeness:.2f}"
 
         data["Connectivity: "] = f"{graph.connectivity}"
         data["Bipartite: "] = "YES" if graph.bipartite else "NO"
@@ -689,8 +689,15 @@ class StringManager:
     def generate_graph(self):
         wrong_command = False
         while True:
-            self.print(sentence="Generate a famous graph!",
-                       options=["kn-full", "kxy-full bipartite", "c-cycle", "q-hypercube", "b-back"],
+            self.print(sentence=f"                     Generate a {self.color('magenta', 'SPECIAL')} graph!",
+                       options=["kn-full",
+                                "knm-full bipartite",
+                                "c-cycle",
+                                "q-hypercube",
+                                "p-petersen",
+                                "kr-kmecki random",
+                                "mr-mathematical random",
+                                "b-back"],
                        wrong_command=wrong_command
                        )
             command = input("Enter: ")
@@ -702,7 +709,7 @@ class StringManager:
                 if n is None:
                     wrong_command = False
                     continue
-                if not self.GM.generate_kn_graph(n=n):
+                if not self.GM.generate_graph(g_type="kn", numeric_args=n):
                     self.print(sentence="This graph was already generated",
                                opt_text="load it from memory",
                                options=[""])
@@ -711,16 +718,16 @@ class StringManager:
                 self.GM.analyze_graph(sm=self)
                 return True
 
-            elif command == "kxy":
-                x = self.get_integer(f"Full Bipartite Graph Kx,y; Enter a value for x.")
-                if x is None:
+            elif command == "knm":
+                n = self.get_integer(f"Full Bipartite Graph Kn,m; Enter a value for x.")
+                if n is None:
                     wrong_command = False
                     continue
-                y = self.get_integer(f"Full Bipartite Graph Kx,y; x = {x}, enter value for y.")
-                if y is None:
+                m = self.get_integer(f"Full Bipartite Graph Kn,m; n = {n}, enter value for y.")
+                if m is None:
                     wrong_command = False
                     continue
-                if not self.GM.generate_kxy_graph(x=x, y=y):
+                if not self.GM.generate_graph(g_type="knm", numeric_args=[n, m]):
                     self.print(sentence="This graph was already generated",
                                opt_text="load it from memory",
                                options=[""])
@@ -734,7 +741,7 @@ class StringManager:
                 if n is None:
                     wrong_command = False
                     continue
-                if not self.GM.generate_c_graph(n=n):
+                if not self.GM.generate_graph(g_type="c", numeric_args=n):
                     self.print(sentence="This graph was already generated",
                                opt_text="load it from memory",
                                options=[""])
@@ -748,12 +755,51 @@ class StringManager:
                 if n is None:
                     wrong_command = False
                     continue
-                if not self.GM.generate_q_graph(n=n):
+                if not self.GM.generate_graph(g_type="q", numeric_args=n):
                     self.print(sentence="This graph was already generated",
                                opt_text="load it from memory",
                                options=[""])
                     input("Press Enter")
                     return False
+                self.GM.analyze_graph(sm=self)
+                return True
+
+            elif command == "kr":
+                n = self.get_integer(f"Erdos-Renyi type of random graph\n The 'kmečki'-way (number of nodes and edges defined and randomly placed),\n enter number of nodes n: ")
+                if n is None:
+                    wrong_command = False
+                    continue
+                m = self.get_integer(f"Erdos-Renyi type of random graph\n The 'kmečki'-way (number of nodes and edges defined and randomly placed),\n with {n} nodes, enter number of edges e: ")
+                if m is None:
+                    wrong_command = False
+                    continue
+                self.GM.generate_graph(g_type="kr", numeric_args=[n, m])
+                self.GM.analyze_graph(sm=self)
+                return True
+
+            elif command == "mr":
+                n = self.get_integer(
+                    f"Erdos-Renyi type of random graph\n The 'mathematical'-way (number of nodes defined and probability of an edge between any two of them),\n enter number of nodes n: ")
+                if n is None:
+                    wrong_command = False
+                    continue
+                p = self.get_integer(
+                    f"Erdos-Renyi type of random graph\n The 'mathematical'-way (number of nodes defined and probability of an edge between any two of them),\n Defined {n} nodes, enter integer p representing p/100 probability: ")
+                if p is None:
+                    wrong_command = False
+                    continue
+                self.GM.generate_graph(g_type="mr", numeric_args=[n, p])
+                self.GM.analyze_graph(sm=self)
+                return True
+
+            elif command == "p":
+                if not self.GM.generate_graph(g_type='p'):
+                    if not self.GM.generate_graph(g_type="p"):
+                        self.print(sentence="This graph was already generated",
+                                   opt_text="load it from memory",
+                                   options=[""])
+                        input("Press Enter")
+                        return False
                 self.GM.analyze_graph(sm=self)
                 return True
             else:
@@ -836,17 +882,18 @@ class StringManager:
             if command == "b":
                 return
 
-            elif command.isdigit() and len(self.GM.current_graph.subgraphs) > int(command) > 0:
-                wrong_command = False
-                main_graph = self.GM.current_graph
-                self.GM.current_graph = main_graph.subgraphs[int(command) - 1]
-                self.graph_analysis()
-                self.GM.current_graph = main_graph
+            elif command.isdigit() and len(self.GM.current_graph.subgraphs) > 0:
+                if len(self.GM.current_graph.subgraphs) > int(command) > 0:
+                    wrong_command = False
+                    main_graph = self.GM.current_graph
+                    self.GM.current_graph = main_graph.subgraphs[int(command) - 1]
+                    self.graph_analysis()
+                    self.GM.current_graph = main_graph
+                else:
+                    wrong_command = True
 
-            elif command == "e":
-                wrong_command = False
-                self.print_euler_string()
-                input("Enter for back")
+            else:
+                wrong_command = True
 
     def node_analysis(self):
         wrong_command = False

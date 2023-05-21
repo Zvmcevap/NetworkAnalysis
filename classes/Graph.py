@@ -282,7 +282,7 @@ class Graph:
                 continue
             if self.max_cluster_coefficient is None or self.max_cluster_coefficient < node.clustering_coefficient:
                 self.max_cluster_coefficient = node.clustering_coefficient
-            if self.min_cluster_coefficient is None or self.min_cluster_coefficient < node.clustering_coefficient:
+            if self.min_cluster_coefficient is None or self.min_cluster_coefficient > node.clustering_coefficient:
                 self.min_cluster_coefficient = node.clustering_coefficient
 
         ccs = [node.clustering_coefficient for node in self.nodes if node.clustering_coefficient is not None]
